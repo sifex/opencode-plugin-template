@@ -1,0 +1,29 @@
+# Source control
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Tests
+*.test.ts
+*.spec.ts
+__tests__
+
+# Development
+.env*
+tsconfig.json
+CLAUDE.md
+
+# Build artifacts
+node_modules
+coverage
+.cache
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db

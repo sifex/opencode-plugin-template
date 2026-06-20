@@ -1,0 +1,39 @@
+{
+  "name": "opencode-plugin-template",
+  "version": "0.1.0",
+  "description": "Template for building organization-specific OpenCode plugins. Bundles a cross-platform sideloader so plugins install via pnpm/npm/bun on macOS and Windows.",
+  "module": "index.ts",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "build": "bun build index.ts --outdir dist --target node --format esm",
+    "postinstall": "node postinstall.js",
+    "test": "bun test",
+    "lint": "bun run --bun tsc --noEmit"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "template"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.14.48",
+    "@types/bun": "latest",
+    "@types/node": "^20.19.40"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "index.ts",
+    "dist/index.js",
+    "loader.js",
+    "postinstall.js",
+    "README.md",
+    "example-config.jsonc"
+  ]
+}

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+out
+*.tgz
+
+# Code coverage
+coverage
+*.lcov
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Caches
+.cache
+*.tsbuildinfo
+.ruff_cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+.vscode
+*.iml
+*.swp
+*.swo

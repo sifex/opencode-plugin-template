@@ -1,0 +1,39 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // The plugin is auto-discovered from ~/.config/opencode/plugins/ after install.
+  // No "plugin" array entry is required.
+  //
+  // For local development, uncomment:
+  //   "plugin": ["/path/to/your-fork/index.ts"],
+
+  "provider": {
+    // -----------------------------------------------------------------------
+    // Add your organisation's providers here. Example:
+    //
+    // "my-provider": {
+    //   "npm": "@ai-sdk/anthropic",
+    //   "name": "My Provider",
+    //   "options": {
+    //     "baseURL": "https://example.com/v1",
+    //     "apiKey": "..."
+    //   },
+    //   "models": {
+    //     "my-model": { "name": "My Model" }
+    //   }
+    // }
+    // -----------------------------------------------------------------------
+  },
+
+  "mcp": {
+    // -----------------------------------------------------------------------
+    // Add your organisation's MCP servers here. Example:
+    //
+    // "my-server": {
+    //   "type": "remote",
+    //   "enabled": false,
+    //   "url": "https://example.com/mcp"
+    // }
+    // -----------------------------------------------------------------------
+  }
+}
