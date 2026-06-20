@@ -27,3 +27,62 @@ jobs:
           node postinstall.js
           test -f "$XDG_CONFIG_HOME/opencode/plugins/opencode-plugin-template.js"
           echo "Postinstall verification passed"
+
+  # ---------------------------------------------------------------------------
+  # OpenCode version matrix. Verifies the sideloader + loader works against
+  # the past ~6 months of OpenCode releases plus the latest.
+  # ---------------------------------------------------------------------------
+  opencode-compat:
+    name: "OpenCode ${{ matrix.opencode-version }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        opencode-version: ["1.15.0", "1.15.6", "1.15.12", "1.15.18", "latest"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Build and pack plugin"
+        run: |
+          bun install
+          bun run build
+          npm pack
+
+      - name: "Install OpenCode and plugin"
+        run: |
+          npm install -g --force opencode-ai@${{ matrix.opencode-version }}
+          TARBALL="$(pwd)/$(ls opencode-plugin-template-*.tgz)"
+          npm install -g "$TARBALL"
+          opencode --version
+
+      - name: "Verify OpenCode loads the plugin"
+        run: |
+          export XDG_CONFIG_HOME=$(mktemp -d)
+          export XDG_DATA_HOME=$(mktemp -d)
+          node postinstall.js
+          test -f "$XDG_CONFIG_HOME/opencode/plugins/opencode-plugin-template.js"
+
+          # `opencode models` triggers full config evaluation including plugin
+          # hooks; --print-logs streams the server log to stdout.
+          output=$(opencode models --print-logs --log-level DEBUG 2>&1)
+          printf '%s\n' "$output"
+
+          # Two checks: command must succeed, and the plugin id must appear in
+          # the debug log (proving OpenCode actually loaded our loader).
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            echo "opencode models exited with code $rc" >&2
+            exit 1
+          fi
+
+          case "$output" in
+            *opencode-plugin-template*)
+              echo "OK: OpenCode ${{ matrix.opencode-version }} loaded the plugin" ;;
+            *)
+              echo "OpenCode ${{ matrix.opencode-version }} did not log the plugin id" >&2
+              exit 1 ;;
+          esac
