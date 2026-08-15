@@ -2,14 +2,17 @@
   "name": "opencode-plugin-template",
   "version": "0.1.0",
   "description": "Template for building organization-specific OpenCode plugins. Bundles a cross-platform sideloader so plugins install via pnpm/npm/bun on macOS and Windows.",
-  "module": "index.ts",
+  "module": "dist/v1/index.js",
   "type": "module",
-  "main": "index.ts",
+  "main": "dist/v1/index.js",
   "exports": {
-    ".": "./index.ts"
+    ".": "./dist/v1/index.js",
+    "./v1": "./dist/v1/index.js",
+    "./v2": "./dist/v2/index.js",
+    "./injector": "./dist/injector.js"
   },
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node --format esm",
+    "build": "bun build v1/index.ts v2/index.ts injector.ts --outdir dist --target node --format esm",
     "postinstall": "node postinstall.js",
     "test": "bun test",
     "lint": "bun run --bun tsc --noEmit"
@@ -28,12 +31,17 @@
   "peerDependencies": {
     "typescript": "^5.9.3"
   },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
   "files": [
-    "index.ts",
-    "dist/index.js",
+    "dist/v1/index.js",
+    "dist/v2/index.js",
+    "dist/injector.js",
     "loader.js",
     "postinstall.js",
     "README.md",
-    "example-config.jsonc"
+    "example-config.jsonc",
+    "example-config.v2.jsonc"
   ]
 }

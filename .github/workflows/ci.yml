@@ -36,12 +36,40 @@ jobs:
   # 1.14.17, so that stands in for the "older release" boundary.
   # ---------------------------------------------------------------------------
   opencode-compat:
-    name: "OpenCode ${{ matrix.opencode-version }}"
+    name: "OpenCode ${{ matrix.generation }} (${{ matrix.opencode-version }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        opencode-version: ["1.14.17", "1.14.51", "1.15.13", "1.16.2", "1.17.8", "latest"]
+        include:
+          - generation: v1
+            package: opencode-ai
+            executable: opencode
+            opencode-version: "1.14.17"
+          - generation: v1
+            package: opencode-ai
+            executable: opencode
+            opencode-version: "1.14.51"
+          - generation: v1
+            package: opencode-ai
+            executable: opencode
+            opencode-version: "1.15.13"
+          - generation: v1
+            package: opencode-ai
+            executable: opencode
+            opencode-version: "1.16.2"
+          - generation: v1
+            package: opencode-ai
+            executable: opencode
+            opencode-version: "1.17.8"
+          - generation: v1
+            package: opencode-ai
+            executable: opencode
+            opencode-version: latest
+          - generation: v2
+            package: "@opencode-ai/cli"
+            executable: opencode2
+            opencode-version: "0.0.0-next-17444"
     steps:
       - uses: actions/checkout@v4
 
@@ -57,10 +85,10 @@ jobs:
 
       - name: "Install OpenCode and plugin"
         run: |
-          npm install -g --force opencode-ai@${{ matrix.opencode-version }}
+          npm install -g --force ${{ matrix.package }}@${{ matrix.opencode-version }}
           TARBALL="$(pwd)/$(ls opencode-plugin-template-*.tgz)"
           npm install -g "$TARBALL"
-          opencode --version
+          ${{ matrix.executable }} --version
 
       - name: "Verify OpenCode loads the plugin"
         run: |
@@ -69,23 +97,29 @@ jobs:
           node postinstall.js
           test -f "$XDG_CONFIG_HOME/opencode/plugins/opencode-plugin-template.js"
 
-          # `opencode models` triggers full config evaluation including plugin
+          # `models` triggers full config evaluation including plugin
           # hooks; --print-logs streams the server log to stdout.
-          output=$(opencode models --print-logs --log-level DEBUG 2>&1)
+          if [ "${{ matrix.generation }}" = "v2" ]; then
+            output=$(${{ matrix.executable }} models --standalone --log-level error 2>&1)
+          else
+            output=$(${{ matrix.executable }} models --print-logs --log-level DEBUG 2>&1)
+          fi
           printf '%s\n' "$output"
 
-          # Two checks: command must succeed, and the plugin id must appear in
-          # the debug log (proving OpenCode actually loaded our loader).
+          # The command must succeed. V1 debug logs additionally identify the
+          # plugin; V2 does not log loaded plugin IDs from this command.
           rc=$?
           if [ $rc -ne 0 ]; then
             echo "opencode models exited with code $rc" >&2
             exit 1
           fi
 
-          case "$output" in
-            *opencode-plugin-template*)
-              echo "OK: OpenCode ${{ matrix.opencode-version }} loaded the plugin" ;;
-            *)
-              echo "OpenCode ${{ matrix.opencode-version }} did not log the plugin id" >&2
-              exit 1 ;;
-          esac
+          if [ "${{ matrix.generation }}" = "v1" ]; then
+            case "$output" in
+              *opencode-plugin-template*)
+                echo "OK: OpenCode ${{ matrix.opencode-version }} loaded the plugin" ;;
+              *)
+                echo "OpenCode ${{ matrix.opencode-version }} did not log the plugin id" >&2
+                exit 1 ;;
+            esac
+          fi

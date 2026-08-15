@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // The plugin is auto-discovered from ~/.config/opencode/plugins/ after install.
+  // For local development, add the shared injector explicitly:
+  // "plugins": ["/path/to/your-fork/injector.ts"],
+
+  // Native V2 configuration belongs here. Existing V1 configuration remains
+  // compatible, but use V2's providers and mcp.servers shapes for new entries.
+  "providers": {},
+  "mcp": { "servers": {} }
+}

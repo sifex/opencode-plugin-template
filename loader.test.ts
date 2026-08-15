@@ -14,7 +14,7 @@ const PLUGIN_NAME = "opencode-plugin-template";
 
 /** Replicated from loader.js — resolves entry file from a package directory */
 function resolveEntry(pkgDir: string): string | null {
-  const dist = join(pkgDir, "dist", "index.js");
+  const dist = join(pkgDir, "dist", "injector.js");
   if (existsSync(dist)) return dist;
 
   const pkgJsonPath = join(pkgDir, "package.json");
@@ -47,14 +47,14 @@ describe("loader: resolveEntry", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("prefers dist/index.js when it exists", () => {
+  it("prefers dist/injector.js when it exists", () => {
     const distDir = join(tmpDir, "dist");
     mkdirSync(distDir);
-    writeFileSync(join(distDir, "index.js"), "export default {}");
+    writeFileSync(join(distDir, "injector.js"), "export default {}");
     writeFileSync(join(tmpDir, "package.json"), JSON.stringify({ main: "index.ts" }));
     writeFileSync(join(tmpDir, "index.ts"), "export default {}");
 
-    expect(resolveEntry(tmpDir)).toBe(join(distDir, "index.js"));
+    expect(resolveEntry(tmpDir)).toBe(join(distDir, "injector.js"));
   });
 
   it("falls back to exports['.'] string", () => {
@@ -441,7 +441,7 @@ describe("loader: Windows npm static fallback paths", () => {
       const progFiles = join(tmp, "Program Files");
       const pluginDir = join(progFiles, "nodejs", "node_modules", PLUGIN_NAME);
       mkdirSync(join(pluginDir, "dist"), { recursive: true });
-      writeFileSync(join(pluginDir, "dist", "index.js"), "export default {}");
+      writeFileSync(join(pluginDir, "dist", "injector.js"), "export default {}");
       writeFileSync(join(pluginDir, "package.json"), JSON.stringify({ version: "2.0.9" }));
 
       const dirs = npmStaticDirs("win32", join(tmp, "Users", "bob"), {
@@ -454,9 +454,9 @@ describe("loader: Windows npm static fallback paths", () => {
       // The Program Files path should be in the list
       expect(dirs).toContain(pluginDir);
 
-      // And resolveEntry should find the dist/index.js
+      // And resolveEntry should find the shared compatibility injector.
       const entry = resolveEntry(pluginDir);
-      expect(entry).toBe(join(pluginDir, "dist", "index.js"));
+      expect(entry).toBe(join(pluginDir, "dist", "injector.js"));
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -518,7 +518,7 @@ describe("loader: fnm (Fast Node Manager) discovery", () => {
       const fnmVersions = join(appData, "fnm", "node-versions");
       const pluginDir = join(fnmVersions, "v24.14.1", "installation", "node_modules", PLUGIN_NAME);
       mkdirSync(join(pluginDir, "dist"), { recursive: true });
-      writeFileSync(join(pluginDir, "dist", "index.js"), "export default {}");
+      writeFileSync(join(pluginDir, "dist", "injector.js"), "export default {}");
       writeFileSync(join(pluginDir, "package.json"), JSON.stringify({ version: "2.1.8" }));
 
       // Verify the path is in our search list
@@ -531,7 +531,7 @@ describe("loader: fnm (Fast Node Manager) discovery", () => {
 
       // Verify resolveEntry finds the entry point
       const entry = resolveEntry(pluginDir);
-      expect(entry).toBe(join(pluginDir, "dist", "index.js"));
+      expect(entry).toBe(join(pluginDir, "dist", "injector.js"));
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -599,9 +599,9 @@ describe("loader: fnm (Fast Node Manager) discovery", () => {
       const v24Dir = join(fnmVersions, "v24.14.1", "installation", "node_modules", PLUGIN_NAME);
       mkdirSync(join(v20Dir, "dist"), { recursive: true });
       mkdirSync(join(v24Dir, "dist"), { recursive: true });
-      writeFileSync(join(v20Dir, "dist", "index.js"), "export default {}");
+      writeFileSync(join(v20Dir, "dist", "injector.js"), "export default {}");
       writeFileSync(join(v20Dir, "package.json"), JSON.stringify({ version: "2.0.5" }));
-      writeFileSync(join(v24Dir, "dist", "index.js"), "export default {}");
+      writeFileSync(join(v24Dir, "dist", "injector.js"), "export default {}");
       writeFileSync(join(v24Dir, "package.json"), JSON.stringify({ version: "2.1.8" }));
 
       const dirs = npmStaticDirs("win32", tmp, {
@@ -616,8 +616,8 @@ describe("loader: fnm (Fast Node Manager) discovery", () => {
 
       // bestCandidate (used by the real loader) would pick 2.1.8 as highest version
       // We test that resolveEntry works on both
-      expect(resolveEntry(v20Dir)).toBe(join(v20Dir, "dist", "index.js"));
-      expect(resolveEntry(v24Dir)).toBe(join(v24Dir, "dist", "index.js"));
+      expect(resolveEntry(v20Dir)).toBe(join(v20Dir, "dist", "injector.js"));
+      expect(resolveEntry(v24Dir)).toBe(join(v24Dir, "dist", "injector.js"));
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -665,11 +665,11 @@ describe("postinstall: getConfigDir path logic", () => {
 // They verify the full loader.js integration (findPlugin -> import -> re-export).
 // Skipped in CI where no global install exists.
 describe("loader: export shape (requires global install)", () => {
-  it.skip("wraps a function export in { id, server } PluginModule shape", () => {
+  it.skip("exports both V1 and V2 plugin contracts", () => {
     // Run with: OPENCODE_PLUGIN_GLOBALLY_INSTALLED=1 bun test
   });
 
-  it.skip("server() returns hooks when called with mock input", () => {
+  it.skip("server() returns V1 hooks when called with mock input", () => {
     // Run with: OPENCODE_PLUGIN_GLOBALLY_INSTALLED=1 bun test
   });
 });

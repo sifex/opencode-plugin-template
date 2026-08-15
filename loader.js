@@ -2,7 +2,7 @@
 //
 // This file is placed in the OpenCode plugins directory by the postinstall
 // script. It locates the globally-installed package and imports the compiled
-// dist/index.js so that both the TUI (Bun) and Desktop (Node.js) work.
+// dist/injector.js so that both the TUI (Bun) and Desktop (Node.js) work.
 //
 // When forking this template, update PLUGIN_NAME below to your own package
 // name (or set OPENCODE_PLUGIN_NAME in the environment).
@@ -63,7 +63,7 @@ function safeSubdirs(dir) {
 
 function resolveEntry(pkgDir) {
   // Prefer pre-built JS (required for Node.js / Desktop app)
-  const dist = join(pkgDir, "dist", "index.js");
+  const dist = join(pkgDir, "dist", "injector.js");
   if (existsSync(dist)) return dist;
 
   // Fall back to package.json resolution (works in Bun)
@@ -254,8 +254,4 @@ function findPlugin() {
 
 const entry = findPlugin();
 const mod = await import(pathToFileURL(entry).href);
-const plugin = mod.default ?? mod;
-
-export default typeof plugin === "function"
-  ? { id: PLUGIN_NAME, server: plugin }
-  : plugin;
+export default mod.default ?? mod;
