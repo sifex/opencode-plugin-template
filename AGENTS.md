@@ -6,8 +6,8 @@
 - Bundles a cross-platform sideloader (`postinstall.js` + `loader.js`) so plugins
   install via `pnpm`/`npm`/`bun` on macOS and Windows and are auto-discovered
   by both the OpenCode CLI and Desktop app.
-- Teams fork the repo, drop their own providers/models/MCP servers into
-  `index.ts`, and publish.
+- Teams fork the repo, add V1 behavior in `v1/index.ts` and V2 behavior in
+  `v2/index.ts`, then publish.
 
 ## Architecture
 
@@ -15,8 +15,10 @@
 - **Runtime:** Bun (build + tests) / Node.js (Desktop app runtime)
 - **Structure:** Single-package template
 - **Key Components:**
-  - `index.ts` - Plugin entry point. Safe defaults (`share = "disabled"`) + a
-    marked section for teams to extend.
+  - `v1/index.ts` - OpenCode V1 entry point and safe defaults.
+  - `v2/index.ts` - OpenCode V2 entry point.
+  - `injector.ts` - Shared V1/V2 compatibility adapter.
+  - `manifest.ts` - Shared provider, model, MCP, and default declarations.
   - `loader.js` - Trampoline copied to `~/.config/opencode/plugins/` that
     locates the installed package via `pnpm`/`npm`/`bun` and imports it.
   - `postinstall.js` - Cross-platform installer (sideloader).
@@ -36,7 +38,10 @@ No environment variables are required for development.
 
 ### Navigation
 
-- `index.ts` - Plugin logic (extend this).
+- `v1/index.ts` - V1 plugin logic.
+- `v2/index.ts` - V2 plugin logic.
+- `injector.ts` - Shared plugin entry point.
+- `manifest.ts` - Shared configuration declarations.
 - `loader.js` - Trampoline (set `PLUGIN_NAME` to your package name).
 - `postinstall.js` - Sideloader.
 - `example-config.jsonc` - Sample user config.
@@ -56,7 +61,10 @@ No environment variables are required for development.
 ## Repository Map
 
 ```
-index.ts              # Plugin entry point
+v1/index.ts           # V1 plugin entry point
+v2/index.ts           # V2 plugin entry point
+injector.ts           # V1/V2 compatibility adapter
+manifest.ts           # Shared configuration declarations
 loader.js             # Sideloader trampoline
 postinstall.js        # Sideloader installer
 example-config.jsonc  # Sample user config
@@ -80,9 +88,9 @@ tsconfig.json         # TypeScript configuration
 
 - The sideloader copies only `loader.js` (no secrets) into the OpenCode
   plugins directory.
-- `dist/index.js` is built from the source; never commit secrets or tokens.
+- `dist/injector.js` is built from the source; never commit secrets or tokens.
 - The default plugin enforces `config.share = "disabled"` to prevent
   accidental session sharing.
-- Custom `package.json` scripts and any code teams add inside `index.ts`
+- Custom `package.json` scripts and any code teams add inside either entrypoint
   should be reviewed like any other code — the postinstall hook runs
   automatically on install.

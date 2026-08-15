@@ -5,7 +5,7 @@
   // No "plugin" array entry is required.
   //
   // For local development, uncomment:
-  //   "plugin": ["/path/to/your-fork/index.ts"],
+  //   "plugin": ["/path/to/your-fork/injector.ts"],
 
   "provider": {
     // -----------------------------------------------------------------------

@@ -39,16 +39,16 @@ function getConfigDir() {
 }
 
 function buildDist() {
-  // Ensure dist/index.js exists — required for the Desktop app (Node.js runtime)
-  const distFile = join(__dirname, "dist", "index.js");
+  // Ensure dist/injector.js exists — required for the Desktop app (Node.js runtime)
+  const distFile = join(__dirname, "dist", "injector.js");
   if (existsSync(distFile)) return;
 
-  console.log("[opencode-plugin-template] Building dist/index.js...");
+  console.log("[opencode-plugin-template] Building dist/injector.js...");
   try {
     execSync("bun run build", { cwd: __dirname, timeout: 30000, stdio: "inherit" });
   } catch {
     console.warn(
-      "[opencode-plugin-template] Warning: could not build dist/index.js (bun not found).\n" +
+      "[opencode-plugin-template] Warning: could not build dist/injector.js (bun not found).\n" +
       "  The plugin will work in the TUI but not in the Desktop app.\n" +
       "  Run manually: cd " + __dirname + " && bun run build"
     );

@@ -69,19 +69,19 @@ describe("postinstall", () => {
     expect(content).toContain("findPlugin");
   });
 
-  it("does not fail when dist/index.js already exists", () => {
-    if (!existsSync(join(PROJECT_DIR, "dist", "index.js"))) return;
+  it("does not fail when dist/injector.js already exists", () => {
+    if (!existsSync(join(PROJECT_DIR, "dist", "injector.js"))) return;
 
     const output = runPostinstall(tmpDir);
     expect(output).toContain("Installed plugin loader");
   });
 
-  it("installed loader uses the template plugin id", () => {
+  it("installed loader loads the shared compatibility injector", () => {
     runPostinstall(tmpDir);
 
     const dest = join(tmpDir, "opencode", "plugins", "opencode-plugin-template.js");
     const content = readFileSync(dest, "utf8");
-    expect(content).toContain('{ id: PLUGIN_NAME, server: plugin }');
+    expect(content).toContain('dist", "injector.js"');
   });
 });
 
