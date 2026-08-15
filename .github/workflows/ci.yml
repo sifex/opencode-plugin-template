@@ -16,7 +16,12 @@ jobs:
         with:
           bun-version: latest
       - name: "Install dependencies"
-        run: bun install
+        run: |
+          for attempt in 1 2 3; do
+            bun install --frozen-lockfile && exit 0
+            [ "$attempt" = 3 ] && exit 1
+            sleep 10
+          done
       - name: "Run type checking"
         run: bun run lint
       - name: "Run tests"
@@ -27,6 +32,98 @@ jobs:
           node postinstall.js
           test -f "$XDG_CONFIG_HOME/opencode/plugins/opencode-plugin-template.js"
           echo "Postinstall verification passed"
+
+  # ---------------------------------------------------------------------------
+  # Package-manager integration. The sideloader must locate a globally
+  # installed package in every supported system package manager, then expose
+  # both OpenCode plugin contracts from the copied loader.
+  # ---------------------------------------------------------------------------
+  integration:
+    name: "Integration (${{ matrix.manager }} ${{ matrix.version }} / Node ${{ matrix.node }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - manager: pnpm
+            version: "9"
+            node: "18"
+          - manager: pnpm
+            version: "10"
+            node: "22"
+          - manager: pnpm
+            version: "11"
+            node: "22"
+          - manager: npm
+            version: "10"
+            node: "18"
+          - manager: npm
+            version: "11"
+            node: "22"
+          - manager: bun
+            version: latest
+            node: "22"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Set up package manager"
+        run: |
+          if [ "${{ matrix.manager }}" = pnpm ]; then
+            npm install -g --force pnpm@${{ matrix.version }}
+            mkdir -p "$HOME/.local/share/pnpm"
+            echo "PNPM_HOME=$HOME/.local/share/pnpm" >> "$GITHUB_ENV"
+            echo "$HOME/.local/share/pnpm" >> "$GITHUB_PATH"
+          elif [ "${{ matrix.manager }}" = npm ]; then
+            npm install -g --force npm@${{ matrix.version }}
+          fi
+
+      - name: "Build and pack plugin"
+        run: |
+          for attempt in 1 2 3; do
+            bun install --frozen-lockfile && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep 10
+          done
+          bun run build
+          npm pack
+
+      - name: "Install the package globally"
+        run: |
+          TARBALL="$(pwd)/$(ls opencode-plugin-template-*.tgz)"
+          if [ "${{ matrix.manager }}" = pnpm ]; then
+            pnpm add -g "$TARBALL" --allow-build=opencode-plugin-template
+          elif [ "${{ matrix.manager }}" = npm ]; then
+            npm install -g "$TARBALL"
+          else
+            bun add -g "$TARBALL"
+          fi
+
+      - name: "Verify loader contracts"
+        run: |
+          node --input-type=module -e '
+            const plugin = (await import("./loader.js")).default;
+            if (plugin?.id !== "opencode-plugin-template") throw new Error("plugin id mismatch");
+            if (typeof plugin.server !== "function") throw new Error("missing V1 server contract");
+            if (typeof plugin.setup !== "function") throw new Error("missing V2 setup contract");
+          '
+
+      - name: "Verify installed loader"
+        run: |
+          export XDG_CONFIG_HOME="$(mktemp -d)"
+          node postinstall.js
+          loader="$XDG_CONFIG_HOME/opencode/plugins/opencode-plugin-template.js"
+          test -f "$loader"
+          printf '{"type":"module"}\n' > "$XDG_CONFIG_HOME/opencode/plugins/package.json"
+          LOADER="$loader" node --input-type=module -e '
+            const plugin = (await import(process.env.LOADER)).default;
+            if (typeof plugin.server !== "function" || typeof plugin.setup !== "function") throw new Error("installed loader has incomplete contracts");
+          '
 
   # ---------------------------------------------------------------------------
   # OpenCode version matrix. Verifies the sideloader + loader works against
@@ -79,7 +176,11 @@ jobs:
 
       - name: "Build and pack plugin"
         run: |
-          bun install
+          for attempt in 1 2 3; do
+            bun install --frozen-lockfile && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep 10
+          done
           bun run build
           npm pack
 
