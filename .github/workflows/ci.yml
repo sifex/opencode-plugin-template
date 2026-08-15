@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+env:
+  NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+
 jobs:
   test:
     name: "Lint & Unit Tests"
