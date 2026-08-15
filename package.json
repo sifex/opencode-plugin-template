@@ -12,7 +12,7 @@
     "./injector": "./dist/injector.js"
   },
   "scripts": {
-    "build": "bun build v1/index.ts v2/index.ts injector.ts --outdir dist --target node --format esm",
+    "build": "bun build v1/index.ts v2/index.ts injector.ts --outdir dist --target node --format esm --external jsonc-parser",
     "postinstall": "node postinstall.js",
     "test": "bun test",
     "lint": "bun run --bun tsc --noEmit"

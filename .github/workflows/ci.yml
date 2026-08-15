@@ -91,7 +91,11 @@ jobs:
         run: |
           TARBALL="$(pwd)/$(ls opencode-plugin-template-*.tgz)"
           if [ "${{ matrix.manager }}" = pnpm ]; then
-            pnpm add -g "$TARBALL" --allow-build=opencode-plugin-template
+            if [ "${{ matrix.version }}" = 9 ]; then
+              pnpm add -g "$TARBALL"
+            else
+              pnpm add -g "$TARBALL" --allow-build=opencode-plugin-template
+            fi
           elif [ "${{ matrix.manager }}" = npm ]; then
             npm install -g "$TARBALL"
           else
