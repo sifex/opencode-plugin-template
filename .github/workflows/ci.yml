@@ -77,6 +77,7 @@ jobs:
             mkdir -p "$HOME/.local/share/pnpm"
             echo "PNPM_HOME=$HOME/.local/share/pnpm" >> "$GITHUB_ENV"
             echo "$HOME/.local/share/pnpm" >> "$GITHUB_PATH"
+            echo "$HOME/.local/share/pnpm/bin" >> "$GITHUB_PATH"
           elif [ "${{ matrix.manager }}" = npm ]; then
             npm install -g --force npm@${{ matrix.version }}
           fi
